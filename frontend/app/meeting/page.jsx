@@ -2,7 +2,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Mic, MicOff, PhoneOff, MoreVertical } from 'lucide-react'
-import Avatar from '../components/Avatar';
+import Avatar from '../../components/Avatar';
 
 const page = () => {
     const [isMuted, setIsMuted] = useState(false);
