@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Mic, MicOff, PhoneOff, MoreVertical } from 'lucide-react'
 import Avatar from '../../components/Avatar';
+import { usePromt } from '@/context/PromtContext';
 
 const page = () => {
     const [isMuted, setIsMuted] = useState(false);
@@ -13,6 +14,7 @@ const page = () => {
     const streamRef = useRef(null);
     const searchParams = useSearchParams();
     const name = searchParams.get('name');
+    const {selectedBots,prompts,administrator} = usePromt();
 
 
     const videoRefs = useRef({
@@ -50,6 +52,9 @@ const page = () => {
             start: {
                 user: {
                     name,
+                    selectedBots,
+                    administrator,
+                    prompts
                 }
             }
         }
@@ -159,16 +164,29 @@ const page = () => {
             <div className="flex flex-col h-[100vh] bg-gradient-to-br from-indigo-100 to-purple-100">
                 <div className='h-[90%] grid grid-cols-2 gap-2 p-2'>
                     {/* Video 1 */}
-                    <Avatar videoRefs={videoRefs} name="Sam" websocketRef={websocketRef} avatar_id="Bryan_FitnessCoach_public"/>
+                    {
+                        selectedBots.includes("Sam") && 
+                        <Avatar videoRefs={videoRefs} name="Sam" websocketRef={websocketRef} avatar_id="Bryan_FitnessCoach_public"/>
+                    }
 
                     {/* Video 2 */}
-                    <Avatar videoRefs={videoRefs} name="Zara" websocketRef={websocketRef} avatar_id="Elenora_IT_Sitting_public"/>
+                    {
+                        selectedBots.includes("Zara") && 
+                        <Avatar videoRefs={videoRefs} name="Zara" websocketRef={websocketRef} avatar_id="Elenora_IT_Sitting_public"/>
+                    }
+                    
 
                     {/* Video 3 */}
-                    <Avatar videoRefs={videoRefs} name="Ben" websocketRef={websocketRef} avatar_id="SilasHR_public"/>
+                    {
+                        selectedBots.includes("Ben") && 
+                        <Avatar videoRefs={videoRefs} name="Ben" websocketRef={websocketRef} avatar_id="SilasHR_public"/>
+                    }
 
-                    {/* Video 4 */}
-                    <Avatar videoRefs={videoRefs} name="Max" websocketRef={websocketRef} avatar_id="cc2984a6003a4d5194eb58a4ad570337"/>
+                    {/* Video 3 */}
+                    {
+                        selectedBots.includes("Max") && 
+                        <Avatar videoRefs={videoRefs} name="Max" websocketRef={websocketRef} avatar_id="cc2984a6003a4d5194eb58a4ad570337"/>
+                    }
                 </div>
 
                 {/* Control Bar */}

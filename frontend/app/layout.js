@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Suspense } from 'react'
+import { PromtProvider } from "@/context/PromtContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +25,9 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Suspense>
-          {children}
+          <PromtProvider>
+            {children}
+          </PromtProvider>
         </Suspense>
       </body>
     </html>

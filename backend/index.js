@@ -3,7 +3,7 @@ import expressWs from 'express-ws';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import {TranscriptionService} from './services/TranscribtionService.js';
-import { SYSTEM_PROMTP } from './constant/promptConstant.js';
+import { ADMINISTRATOR_PROMT, SYSTEM_PROMTP } from './constant/promptConstant.js';
 import {promptLLM} from './services/promptLLM.js'
 import axios from 'axios';
 
@@ -87,12 +87,17 @@ app.ws('/', (ws, req) => {
             name: undefined,
             email: undefined
         },
+        selectedBots: [],
+        administrator: "",
+        prompts: {},
         isSomeoneSpeaking: false
     };
 
     const sessesions = new Map();
     const transcriptionService = new TranscriptionService();
     const userChat = [];
+    const administratorChat = [];
+
     
 
     // Handle incoming messages from Twilio
@@ -104,7 +109,11 @@ app.ws('/', (ws, req) => {
                 case 'start':
                     config.user.name = data?.start?.user?.name;
                     config.user.email = data?.start?.user?.email;
-                    userChat.push({ role: "system", content: SYSTEM_PROMTP(config.user.name) });
+                    config.selectedBots = data?.start?.user?.selectedBots;
+                    config.administrator= data?.start?.user?.administrator;
+                    config.prompts = data?.start?.user?.prompts;
+                    administratorChat.push({ role: "system", content:  config.administrator});
+                    userChat.push({ role: "system", content: SYSTEM_PROMTP(config.prompts) });
                     break;
                 case 'media':
                     transcriptionService.send(data.media.payload);
@@ -126,11 +135,13 @@ app.ws('/', (ws, req) => {
         if(config.isSomeoneSpeaking) return;
         config.isSomeoneSpeaking = true;
         console.log(`user: ${transcript_text}`)
-        userChat.push({ role: "user", content: transcript_text });
+        
+        administratorChat.push({ role: "user", content: transcript_text });
+        const administratorRes = await promptLLM(administratorChat);
+        console.log(administratorRes);
+        
+        userChat.push({ role: "user", content: administratorRes });
         const response = await promptLLM(userChat);
-        
-
-        
         userChat.push({ role: "assistant", content: response });
         const parRes = JSON.parse(response);
 
