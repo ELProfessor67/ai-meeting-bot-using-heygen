@@ -157,6 +157,13 @@ app.ws('/', (ws, req) => {
         await sendTextToHeyGenServer(session_id,token,text);
         console.log(name,text)
 
+        const current_user_speaking = {
+            user: parRes.user,
+            event: "current_user_speaking"
+        }
+
+        ws.send(JSON.stringify(current_user_speaking));
+
         config.isSomeoneSpeaking = false;
         
     });

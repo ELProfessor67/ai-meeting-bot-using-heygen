@@ -254,9 +254,10 @@ const Avatar = ({ videoRefs, name, websocketRef, avatar_id }) => {
                 </div>
             </div>
             <video
-                ref={(el) => {videoRefs.current.max = el; mediaElement.current = el}} // Attach ref
+                ref={(el) => {videoRefs.current[name] = el; mediaElement.current = el}} // Attach ref
                 className={`absolute w-full h-full z-10 rounded-md object-contain ${!connected ? 'hidden' : ''}`}
                 autoPlay
+                
             ></video>
             <div className={`absolute bottom-2 left-2 bg-black text-white text-sm px-2 py-1 rounded z-50 ${!connected ? 'hidden' : ''}`}>
                 {name}

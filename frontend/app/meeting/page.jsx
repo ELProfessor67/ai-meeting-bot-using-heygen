@@ -18,10 +18,10 @@ const page = () => {
 
 
     const videoRefs = useRef({
-        sam: null,
-        zara: null,
-        ben: null,
-        max: null,
+        Sam: null,
+        Zara: null,
+        Ben: null,
+        Max: null,
     });
 
 
@@ -78,13 +78,18 @@ const page = () => {
             const data = JSON.parse(event.data);
 
             switch (data.event) {
-                case 'media':
+                case 'current_user_speaking':
                     const name = data.user;
-                    console.log(name)
-                    const base64Audio = data.media.payload;
-                    if (videoRefs.current[name]) {
-                        videoRefs.current[name].src = base64Audio;
-                        videoRefs.current[name].play();
+                    console.log(name,videoRefs.current[name]);
+                    Object.keys(videoRefs.current).map(key => {
+                        console.log(key,videoRefs.current[key])
+                        if(videoRefs.current[key]){
+
+                            videoRefs.current[key].muted = true
+                        }
+                    });
+                    if(videoRefs.current[name]){
+                        videoRefs.current[name].muted = false;
                     }
                     break;
             }
