@@ -43,6 +43,7 @@ export default function PromtForm() {
     }
 
     const handleSubmit = (e) => {
+        if(selectedBots.length == 0) return alert("Please select atlease one bot.")
         e.preventDefault()
         router.push('/meeting')
         

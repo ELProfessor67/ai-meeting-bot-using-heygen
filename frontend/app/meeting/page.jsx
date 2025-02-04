@@ -92,6 +92,14 @@ const page = () => {
                         videoRefs.current[name].muted = false;
                     }
                     break;
+                case 'stop-speking':
+                    Object.keys(videoRefs.current).map(key => {
+                        console.log(key,videoRefs.current[key])
+                        if(videoRefs.current[key]){
+
+                            videoRefs.current[key].muted = true
+                        }
+                    });
             }
         };
 
