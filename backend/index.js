@@ -94,7 +94,7 @@ app.ws('/', (ws, req) => {
     };
 
     const sessesions = new Map();
-    const transcriptionService = new TranscriptionService();
+    const transcriptionService = new TranscriptionService(ws);
     const userChat = [];
     const administratorChat = [];
 
@@ -132,7 +132,13 @@ app.ws('/', (ws, req) => {
 
     transcriptionService.on('transcription', async (transcript_text) => {
         if (!transcript_text) return;
-        if(config.isSomeoneSpeaking) return;
+        
+        const stop_speaking = {
+            event: "stop-speking"
+        }
+
+        ws.send(JSON.stringify(stop_speaking));
+
         config.isSomeoneSpeaking = true;
         console.log(`user: ${transcript_text}`)
         
@@ -164,7 +170,7 @@ app.ws('/', (ws, req) => {
 
         ws.send(JSON.stringify(current_user_speaking));
 
-        config.isSomeoneSpeaking = false;
+       
         
     });
 
