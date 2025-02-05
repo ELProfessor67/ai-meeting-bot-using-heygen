@@ -12,7 +12,7 @@ export async function promptLLM(prompt) {
       presence_penalty: 0.6,
       frequency_penalty: 0,
       top_p: 1,
-      max_tokens: 70,
+      max_tokens: 150,
       messages: prompt,
     });
   

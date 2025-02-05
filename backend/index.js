@@ -3,7 +3,7 @@ import expressWs from 'express-ws';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import {TranscriptionService} from './services/TranscribtionService.js';
-import { ADMINISTRATOR_PROMT, SYSTEM_PROMTP } from './constant/promptConstant.js';
+import { SYSTEM_PROMTP } from './constant/promptConstant.js';
 import {promptLLM} from './services/promptLLM.js'
 import axios from 'axios';
 
@@ -45,8 +45,6 @@ app.post('/get-access-token',async (req, res) => {
                 'x-api-key': API_KEY
             }
         });
-
-        console.log(response.data.data.token)
         res.status(200).json({token: response.data.data.token});
     } catch (error) {
         console.error('Error retrieving access token:', error);
@@ -79,6 +77,26 @@ const sendTextToHeyGenServer = async (session_id,token,text) => {
     }
 }
 
+const interruptAvatar = async (session_id,token,name) => {
+    try {
+        const response = await axios.post(
+            `https://api.heygen.com/v1/streaming.interrupt`,
+            {
+              session_id: session_id,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+        );
+
+        console.log(`${name } interrupt: `,response.data.message);
+    } catch (error) {
+        console.log(error?.response?.data?.message || error?.message)
+    }
+}
 
 // WebSocket route for media-stream
 app.ws('/', (ws, req) => {
@@ -90,13 +108,15 @@ app.ws('/', (ws, req) => {
         selectedBots: [],
         administrator: "",
         prompts: {},
-        isSomeoneSpeaking: false
+        isSomeoneSpeaking: false,
+        currentSpeakingBot: undefined
     };
 
     const sessesions = new Map();
     const transcriptionService = new TranscriptionService(ws);
     const userChat = [];
     const administratorChat = [];
+
 
     
 
@@ -132,45 +152,59 @@ app.ws('/', (ws, req) => {
 
     transcriptionService.on('transcription', async (transcript_text) => {
         if (!transcript_text) return;
-        
-        const stop_speaking = {
-            event: "stop-speking"
+
+        console.log(`user: ${transcript_text}`)
+        //Interrupt
+        if(config.currentSpeakingBot){
+            const name = config.currentSpeakingBot;
+            const session = sessesions.get(name);
+            if (session) {
+                const session_id = session.sessionData.session_id;
+                const token = session.sessionToken;
+                Promise.all([interruptAvatar(session_id,token,name)]);
+            }
         }
 
-        ws.send(JSON.stringify(stop_speaking));
-
-        config.isSomeoneSpeaking = true;
-        console.log(`user: ${transcript_text}`)
-        
+        //administrtor
         administratorChat.push({ role: "user", content: transcript_text });
         const administratorRes = await promptLLM(administratorChat);
-        console.log(administratorRes);
+        console.log("administrator select: ",JSON.parse(administratorRes)?.user);
         
+
+        //bots
         userChat.push({ role: "user", content: administratorRes });
         const response = await promptLLM(userChat);
         userChat.push({ role: "assistant", content: response });
-        const parRes = JSON.parse(response);
+        let parRes;
+        try {            
+            parRes = JSON.parse(response);
+        } catch (error) {
+            console.log('error during parsing: ', error.message);
+            return;
+        }
 
-        let name = parRes.user?.toLowerCase() || "sam";
+        //parse renponse
+        let name = parRes.user?.toLowerCase() || "sam";       
         let text = parRes.output;
+        config.currentSpeakingBot = name;
+
+
+
+        
         const session = sessesions.get(name);
         if (!session) {
             console.error('Session not found:', name);
             return;
         }
+
         const session_id = session.sessionData.session_id;
         const token = session.sessionToken;
+
         await sendTextToHeyGenServer(session_id,token,text);
-        console.log(name,text)
+        console.log(`${name}: ${text}`);
+        
 
-        const current_user_speaking = {
-            user: parRes.user,
-            event: "current_user_speaking"
-        }
 
-        ws.send(JSON.stringify(current_user_speaking));
-
-       
         
     });
 
