@@ -49,11 +49,6 @@ export default function PromtForm() {
         
     }
 
-    useEffect(() => {
-        const value = ADMINISTRATOR_PROMT(selectedBots);
-        setAdministrator(value)
-    },[selectedBots])
-
     return (
         <Card className="w-full max-w-2xl mx-auto shadow-lg">
             <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
@@ -125,13 +120,7 @@ export default function PromtForm() {
                             </TooltipProvider>
                         </Label>
 
-                        <Textarea
-                            id="administrator"
-                            value={administrator}
-                            onChange={(e) => setAdministrator(e.target.value)}
-                             placeholder="Enter administrator Prompt"
-                            className="border-2 border-gray-300 focus:border-purple-500 transition-colors duration-200 min-h-[100px]"
-                        />
+                        
                     </div>
 
                     <Button

@@ -7,12 +7,11 @@ const PromtContext = createContext();
 export const PromtProvider = ({ children }) => {
     const [selectedBots, setSelectedBots] = useState([])
     const [prompts, setPrompts] = useState({})
-    const [administrator, setAdministrator] = useState("")
 
 
 
 
-    return <PromtContext.Provider value={{selectedBots,setSelectedBots,prompts,setPrompts,administrator,setAdministrator}}>
+    return <PromtContext.Provider value={{selectedBots,setSelectedBots,prompts,setPrompts}}>
         {children}
     </PromtContext.Provider>
 }

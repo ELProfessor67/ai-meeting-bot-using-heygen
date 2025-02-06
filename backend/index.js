@@ -70,7 +70,7 @@ const sendTextToHeyGenServer = async (session_id,token,text) => {
         );
 
 
-        console.log(response.data.data)
+    
         
     } catch (error) {
         console.log(error?.response?.data?.message || error?.message)
@@ -92,7 +92,7 @@ const interruptAvatar = async (session_id,token,name) => {
             }
         );
 
-        console.log(`${name } interrupt: `,response.data.message);
+        console.log(`${name } interrupt `,response.data.message);
     } catch (error) {
         console.log(error?.response?.data?.message || error?.message)
     }
@@ -113,9 +113,8 @@ app.ws('/', (ws, req) => {
     };
 
     const sessesions = new Map();
-    const transcriptionService = new TranscriptionService(ws);
+    const transcriptionService = new TranscriptionService(ws,handleIntrupt);
     const userChat = [];
-    const administratorChat = [];
 
 
     
@@ -132,8 +131,10 @@ app.ws('/', (ws, req) => {
                     config.selectedBots = data?.start?.user?.selectedBots;
                     config.administrator= data?.start?.user?.administrator;
                     config.prompts = data?.start?.user?.prompts;
-                    administratorChat.push({ role: "system", content:  config.administrator});
-                    userChat.push({ role: "system", content: SYSTEM_PROMTP(config.prompts) });
+
+                    const systemPrompt = SYSTEM_PROMTP(config.prompts,config.selectedBots);
+                    
+                    userChat.push({ role: "system", content: systemPrompt});
                     break;
                 case 'media':
                     transcriptionService.send(data.media.payload);
@@ -150,12 +151,10 @@ app.ws('/', (ws, req) => {
         }
     });
 
-    transcriptionService.on('transcription', async (transcript_text) => {
-        if (!transcript_text) return;
 
-        console.log(`user: ${transcript_text}`)
-        //Interrupt
+    function handleIntrupt () {
         if(config.currentSpeakingBot){
+            console.log('interupting...',config.currentSpeakingBot);
             const name = config.currentSpeakingBot;
             const session = sessesions.get(name);
             if (session) {
@@ -164,17 +163,19 @@ app.ws('/', (ws, req) => {
                 Promise.all([interruptAvatar(session_id,token,name)]);
             }
         }
+    }
 
-        //administrtor
-        administratorChat.push({ role: "user", content: transcript_text });
-        const administratorRes = await promptLLM(administratorChat);
-        console.log("administrator select: ",JSON.parse(administratorRes)?.user);
-        
+    transcriptionService.on('transcription', async (transcript_text) => {
+        if (!transcript_text) return;
+
+        console.log(`user: ${transcript_text}`)
 
         //bots
-        userChat.push({ role: "user", content: administratorRes });
+        userChat.push({ role: "user", content:  transcript_text});
         const response = await promptLLM(userChat);
         userChat.push({ role: "assistant", content: response });
+
+      
         let parRes;
         try {            
             parRes = JSON.parse(response);
@@ -187,9 +188,6 @@ app.ws('/', (ws, req) => {
         let name = parRes.user?.toLowerCase() || "sam";       
         let text = parRes.output;
         config.currentSpeakingBot = name;
-
-
-
         
         const session = sessesions.get(name);
         if (!session) {
@@ -202,10 +200,6 @@ app.ws('/', (ws, req) => {
 
         await sendTextToHeyGenServer(session_id,token,text);
         console.log(`${name}: ${text}`);
-        
-
-
-        
     });
 
     // Handle connection close and log transcript

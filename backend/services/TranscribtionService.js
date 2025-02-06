@@ -6,7 +6,7 @@ import WebSocket from 'ws';
 export class TranscriptionService extends EventEmitter {
   socket;
   isOpen = false;
-  constructor(ws) {
+  constructor(ws,handleIntrupt) {
     super();
        this.socket = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2-phonecall&language=en&smart_format=true&sample_rate=8000&channels=1&multichannel=false&no_delaytrue&interim_results=true&endpointing=300&utterance_end_ms=1000', [
         'token',
@@ -20,8 +20,17 @@ export class TranscriptionService extends EventEmitter {
 
       this.socket.onmessage = (message) => {
         const received = JSON.parse(message.data)
+        
         if(!received?.channel?.alternatives) return;
         const transcript = received?.channel?.alternatives[0]?.transcript
+        
+        if (
+          (transcript?.split(" ")?.length >= 2) ||
+          transcript?.toLowerCase().includes("okay") ||
+          transcript?.toLowerCase().includes("great")
+        ) {
+          handleIntrupt();
+        }
         
         if (transcript && received.is_final) {
           this.emit("transcription",transcript);

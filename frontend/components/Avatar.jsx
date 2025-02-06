@@ -7,7 +7,7 @@ const API_CONFIG = {
     serverUrl: "https://api.heygen.com",
 };
 
-const Avatar = ({ videoRefs, name, websocketRef, avatar_id }) => {
+const Avatar = ({ videoRefs, name, websocketRef, avatar_id, poster }) => {
  
     const searchParams = useSearchParams();
     const [isSessionActive, setIsSessionActive] = useState(false);
@@ -21,6 +21,7 @@ const Avatar = ({ videoRefs, name, websocketRef, avatar_id }) => {
     const sessTokenRef = useRef(null);
     const sessionDataRef = useRef(null);
     const isAlreadyRef = useRef(null);
+    const diconnectedByMe = useRef(false);
 
     const sendSessionOnServer = useCallback(async () => {
         const session = {
@@ -161,6 +162,12 @@ const Avatar = ({ videoRefs, name, websocketRef, avatar_id }) => {
             room.on(LivekitClient.RoomEvent.Disconnected, (reason) => {
                 setConnected(false)
                 console.log(`Room disconnected: ${reason}`);
+                if(!diconnectedByMe.current){
+                     //reconecction
+                    isAlreadyRef.current = false;
+                    console.log("I am Calling again...",name);
+                    createNewSession();
+                }
             });
 
             room.on(LivekitClient.RoomEvent.Connected, (e) => {
@@ -203,12 +210,19 @@ const Avatar = ({ videoRefs, name, websocketRef, avatar_id }) => {
             console.log("Streaming started successfully");
         } catch (error) {
             console.log("Failed to start streaming");
+            setConnected(false);
+
+            //reconecction
+            isAlreadyRef.current = false;
+            console.log("I am Calling again...",name);
+            createNewSession();
         }
     };
 
     // Close session
     const closeSession = async () => {
         if (!sessionDataRef.current) return;
+        diconnectedByMe.current = true;
 
         try {
             await fetch(`${API_CONFIG.serverUrl}/v1/streaming.stop`, {
@@ -246,7 +260,7 @@ const Avatar = ({ videoRefs, name, websocketRef, avatar_id }) => {
     }, []);
     return (
         <div className="w-full h-full relative bg-gray-700 rounded-md">
-            <div className={`absolute w-full h-full z-10 flex items-center justify-center ${connected ? 'hidden' : ''}`}>
+            <div className={`absolute w-full h-full z-20  bg-black/20 flex items-center justify-center ${connected ? 'hidden' : ''}`}>
                 <div className="flex flex-row gap-2">
                     <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce"></div>
                     <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.3s]"></div>
@@ -255,7 +269,8 @@ const Avatar = ({ videoRefs, name, websocketRef, avatar_id }) => {
             </div>
             <video
                 ref={(el) => {videoRefs.current[name] = el; mediaElement.current = el}} // Attach ref
-                className={`absolute w-full h-full z-10 rounded-md object-contain ${!connected ? 'hidden' : ''}`}
+                className={`absolute w-full h-full z-10 rounded-md object-contain`}
+                poster={poster}
                 autoPlay
                 
             ></video>

@@ -1,3 +1,11 @@
+import OpenAI from "openai";
+import "dotenv/config";
+import readline from 'readline-sync';
+import { SYSTEM_PROMTP } from "./constant/promptConstant.js";
+
+const openai = new OpenAI();
+
+const aviableUser = ["Zara","Sam"];
 export const BotsPrompt = {
     "Sam":`An Financial Expert with over 15 years of experience advising small and medium-sized businesses (SMBs) on financial planning, budgeting, investment strategies, and scaling operations. In addition to expertise in traditional finance, you have a deep knowledge of cryptocurrency, blockchain-based solutions, and their applications for SMBs.Your key competencies include:
 	                                                                                •	Budget Planning and Cash Flow Management: Helping SMBs optimize resources and maintain healthy operational cash flow.
@@ -127,118 +135,40 @@ export const BotsPrompt = {
 }
 
 
+export async function promptLLM(prompt) {
+    const stream = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      stream: true,
+      temperature: 0.7,
+      presence_penalty: 0.6,
+      frequency_penalty: 0,
+      top_p: 1,
+      max_tokens: 150,
+      messages: prompt,
+    });
+  
 
+    let text = '';
+    for await (const chunk of stream) {
+     
+        const chunk_message = chunk?.choices[0]?.delta?.content;
+        if (chunk_message) {
+          text += chunk_message;
+        }
+      
+    }
+   
+    return text;
+}
 
+const history = [{ role: "system", content: SYSTEM_PROMTP(BotsPrompt,aviableUser) }];
+while(true){
+    var query = readline.question('user: ');
+    if(query == 'exit') break;
 
+    history.push({ role: "user", content: query });
 
-// export const ADMINISTRATOR_PROMT = (enableUsers) => (`
-	
-// 	You have 4 users, and you will receive input in the form of text where multiple users are conversing with each other. You need to handle the roles of these 4 users. At the current time, I will provide the list of available users. Here's what you need to do:
-
-// 	- If a user is mentioned in the text, you need to respond with a JSON that specifies which user will respond and what the question is.
-// 	- If no user is mentioned, the user who responded last should respond again.
-// 	- If the text is about a particular domain and no user is mentioned, the expert for that domain should respond. If that expert is not available, the user who responded last will respond.
-// 	- If a user is mentioned in the text but is not available, the user who responded last should inform that the mentioned user is not available.
-// 	- If it's unclear who should respond, select any available user from the list, but only do this if the response isn't clear.
-
-// 	important: make sure u select avaible user only in 'user' fiels
-
-// 	User:
-// 	- Zara
-// 	- Max
-// 	- Sam
-// 	- Ben
-
-
-
-// 	User Roles:
-// 	- Zara: Sales and Marketing Consultant
-// 	- Max: Technology Consultant
-// 	- Sam: Financial Expert for Small and Medium-Sized Businesses (Crypto-Savvy)
-// 	- Ben: Venture Capital and Scaling Expert (Mark Cuban-Style)
-
-// 	Avaible User:
-// 	${enableUsers.map((user) => (`- ${user}\n`))}
-
-
-// 	Response Format:
-// 	{
-// 		"user": "<Selected User>",
-// 		"question": "<Original Input>"
-// 	}
-// 	Examples:
-// 	Example 1:
-// 	Input: "Ben, how can I scale my business quickly?"
-// 	Output:
-// 	{
-// 		"user": "Ben",
-// 		"question": "Ben, how can I scale my business quickly?"
-// 	}
-// 	Example 2:
-// 	Input: "How do I handle digital marketing challenges?"
-// 	Output:
-// 	{
-// 		"user": "Zara",
-// 		"question": "How do I handle digital marketing challenges?"
-// 	}
-// 	Example 3:
-// 	Input: "Sam, what are some good financial strategies?"
-// 	Output:
-// 	{
-// 		"user": "Sam",
-// 		"question": "Sam, what are some good financial strategies?"
-// 	}
-// 	Example 4:
-// 	Input: "What's the latest tech trend?"
-// 	Output:
-// 	{
-// 		"user": "Max",
-// 		"question": "What's the latest tech trend?"
-// 	}
-// 	Example 5: (Ongoing Conversation)
-// 	User: "Max, what’s the best way to implement AI in my SaaS product?"
-// 	Assistant Output:
-// 	{
-// 		"user": "Max",
-// 		"question": "Max, what’s the best way to implement AI in my SaaS product?"
-// 	}
-// 	User Follow-Up: "And how does that compare to blockchain integration?"
-// 	Assistant Output:
-// 	{
-// 		"user": "Max",
-// 		"question": "And how does that compare to blockchain integration?"
-// 	}
-// 	(Max remains the selected user as the conversation continues in the tech domain.)
-// 	Example 6:
-// 	Input: "I need funding but don't know where to start."
-// 	Output:
-// 	{
-// 		"user": "Ben",
-// 		"question": "I need funding but don't know where to start."
-// 	}
-// `);
-
-
-export const ADMINISTRATOR_PROMT = (enableUsers) => (`
-	You are an advanced conversational AI designed to manage and respond to a dialogue involving four distinct users. The users are Zara, Max, Sam, and Ben, each with their own expertise. Your task is to determine who should respond based on the input text that reflects their conversation.
-
-	If a user is mentioned in the text, your output should be a JSON object that specifies which user will respond and what the question is. If no user is mentioned, the user who last responded should reply again. In cases where the text pertains to a specific domain without a mentioned user, the relevant expert should respond; if that expert is not available, the last responding user will take their place. If a mentioned user is unavailable, the last responding user should inform that the mentioned user is not available. In situations where it is unclear who should respond, select any available user from the list, ensuring it is only from the available users.
-
-	Also make sure to recognize variations in user input where names are mistakenly pronounced differently, such as "Zara" instead of "Sarah" or "Max" instead of "Maths." Ensure you accurately interpret and select the correct name based on context
-
-	Available Users: ${enableUsers.map((user) => (`- ${user} \n`))}
-
-	Response Format: { "user": "", "question": "" }
-
-	Examples: Example 1: Input: "Ben, how can I scale my business quickly?" Output: { "user": "Ben", "question": "Ben, how can I scale my business quickly?" }
-
-	Example 2: Input: "How do I handle digital marketing challenges?" Output: { "user": "Zara", "question": "How do I handle digital marketing challenges?" }
-
-	Example 3: Input: "Sam, what are some good financial strategies?" Output: { "user": "Sam", "question": "Sam, what are some good financial strategies?" }
-
-	Example 4: Input: "What's the latest tech trend?" Output: { "user": "Max", "question": "What's the latest tech trend?" }
-
-	Example 5: (Ongoing Conversation) User: "Max, what’s the best way to implement AI in my SaaS product?" Assistant Output: { "user": "Max", "question": "Max, what’s the best way to implement AI in my SaaS product?" } User Follow-Up: "And how does that compare to blockchain integration?" Assistant Output: { "user": "Max", "question": "And how does that compare to blockchain integration?" }
-
-	Example 6: Input: "I need funding but don't know where to start." Output: { "user": "Ben", "question": "I need funding but don't know where to start." }
-`);
+    const response = await promptLLM(history);
+    history.push({ role: "assistant", content: response });
+    console.log(response);
+}

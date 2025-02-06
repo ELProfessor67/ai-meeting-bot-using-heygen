@@ -14,7 +14,7 @@ const page = () => {
     const streamRef = useRef(null);
     const searchParams = useSearchParams();
     const name = searchParams.get('name');
-    const {selectedBots,prompts,administrator} = usePromt();
+    const {selectedBots,prompts} = usePromt();
 
 
     const videoRefs = useRef({
@@ -53,7 +53,7 @@ const page = () => {
                 user: {
                     name,
                     selectedBots,
-                    administrator,
+                    
                     prompts
                 }
             }
@@ -179,26 +179,26 @@ const page = () => {
                     {/* Video 1 */}
                     {
                         selectedBots.includes("Sam") && 
-                        <Avatar videoRefs={videoRefs} name="Sam" websocketRef={websocketRef} avatar_id="Bryan_FitnessCoach_public"/>
+                        <Avatar videoRefs={videoRefs} name="Sam" websocketRef={websocketRef} avatar_id="Bryan_FitnessCoach_public" poster="/avatar/Sam.png"/>
                     }
 
                     {/* Video 2 */}
                     {
                         selectedBots.includes("Zara") && 
-                        <Avatar videoRefs={videoRefs} name="Zara" websocketRef={websocketRef} avatar_id="Elenora_IT_Sitting_public"/>
+                        <Avatar videoRefs={videoRefs} name="Zara" websocketRef={websocketRef} avatar_id="Elenora_IT_Sitting_public" poster="/avatar/Zara.png"/>
                     }
                     
 
                     {/* Video 3 */}
                     {
                         selectedBots.includes("Ben") && 
-                        <Avatar videoRefs={videoRefs} name="Ben" websocketRef={websocketRef} avatar_id="SilasHR_public"/>
+                        <Avatar videoRefs={videoRefs} name="Ben" websocketRef={websocketRef} avatar_id="SilasHR_public" poster="/avatar/Ben.png"/>
                     }
 
                     {/* Video 3 */}
                     {
                         selectedBots.includes("Max") && 
-                        <Avatar videoRefs={videoRefs} name="Max" websocketRef={websocketRef} avatar_id="cc2984a6003a4d5194eb58a4ad570337"/>
+                        <Avatar videoRefs={videoRefs} name="Max" websocketRef={websocketRef} avatar_id="cc2984a6003a4d5194eb58a4ad570337" poster="/avatar/Max.png"/>
                     }
                 </div>
 
