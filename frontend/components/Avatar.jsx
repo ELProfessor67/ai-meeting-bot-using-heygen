@@ -165,6 +165,7 @@ const Avatar = ({ videoRefs, name, websocketRef, avatar_id, poster }) => {
                 if(!diconnectedByMe.current){
                      //reconecction
                     isAlreadyRef.current = false;
+                    sessTokenRef.current = null;
                     console.log("I am Calling again...",name);
                     createNewSession();
                 }
@@ -214,6 +215,7 @@ const Avatar = ({ videoRefs, name, websocketRef, avatar_id, poster }) => {
 
             //reconecction
             isAlreadyRef.current = false;
+            sessTokenRef.current = null;
             console.log("I am Calling again...",name);
             createNewSession();
         }

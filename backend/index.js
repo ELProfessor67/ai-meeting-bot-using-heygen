@@ -12,6 +12,7 @@ dotenv.config();
 
 // Retrieve the OpenAI API key from environment variables
 const { OPENAI_API_KEY } = process.env;
+let previors_clear = null;
 
 if (!OPENAI_API_KEY) {
     console.error('Missing OpenAI API key. Please set it in the .env file.');
@@ -52,8 +53,13 @@ app.post('/get-access-token',async (req, res) => {
     }
 });
 
-const sendTextToHeyGenServer = async (session_id,token,text) => {
+const sendTextToHeyGenServer = async (session_id,token,text,handleIntrupt, config) => {
     try {
+        if(previors_clear != config.currentSpeakingBot){
+            handleIntrupt();
+            previors_clear = config.currentSpeakingBot;
+        }
+
         const response = await axios.post(
             `https://api.heygen.com/v1/streaming.task`,
             {
@@ -68,9 +74,10 @@ const sendTextToHeyGenServer = async (session_id,token,text) => {
               },
             }
         );
+        
+       
 
-
-    
+        
         
     } catch (error) {
         console.log(error?.response?.data?.message || error?.message)
@@ -92,7 +99,7 @@ const interruptAvatar = async (session_id,token,name) => {
             }
         );
 
-        console.log(`${name } interrupt `,response.data.message);
+        // console.log(`${name } interrupt `,response.data.message);
     } catch (error) {
         console.log(error?.response?.data?.message || error?.message)
     }
@@ -154,9 +161,10 @@ app.ws('/', (ws, req) => {
 
     function handleIntrupt () {
         if(config.currentSpeakingBot){
-            console.log('interupting...',config.currentSpeakingBot);
             const name = config.currentSpeakingBot;
+
             const session = sessesions.get(name);
+            Array.from(sessesions.keys())
             if (session) {
                 const session_id = session.sessionData.session_id;
                 const token = session.sessionToken;
@@ -169,6 +177,7 @@ app.ws('/', (ws, req) => {
         if (!transcript_text) return;
 
         console.log(`user: ${transcript_text}`)
+ 
 
         //bots
         userChat.push({ role: "user", content:  transcript_text});
@@ -187,7 +196,7 @@ app.ws('/', (ws, req) => {
         //parse renponse
         let name = parRes.user?.toLowerCase() || "sam";       
         let text = parRes.output;
-        config.currentSpeakingBot = name;
+       
         
         const session = sessesions.get(name);
         if (!session) {
@@ -198,7 +207,8 @@ app.ws('/', (ws, req) => {
         const session_id = session.sessionData.session_id;
         const token = session.sessionToken;
 
-        await sendTextToHeyGenServer(session_id,token,text);
+        await sendTextToHeyGenServer(session_id,token,text,handleIntrupt,config);
+        config.currentSpeakingBot = name;
         console.log(`${name}: ${text}`);
     });
 
