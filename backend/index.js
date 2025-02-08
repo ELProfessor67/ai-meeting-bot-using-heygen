@@ -107,7 +107,7 @@ const interruptAvatar = async (session_id,token,name) => {
 
 // WebSocket route for media-stream
 app.ws('/', (ws, req) => {
-    const config = {
+    let config = {
         user: {
             name: undefined,
             email: undefined
@@ -121,7 +121,7 @@ app.ws('/', (ws, req) => {
 
     const sessesions = new Map();
     const transcriptionService = new TranscriptionService(ws,handleIntrupt);
-    const userChat = [];
+    let userChat = [];
 
 
     
@@ -216,6 +216,18 @@ app.ws('/', (ws, req) => {
     ws.on('close', async () => {
         console.log('Client disconnected');
         transcriptionService.close();
+        userChat = [];
+        config = {
+            user: {
+                name: undefined,
+                email: undefined
+            },
+            selectedBots: [],
+            administrator: "",
+            prompts: {},
+            isSomeoneSpeaking: false,
+            currentSpeakingBot: undefined
+        };
     });
 });
 
