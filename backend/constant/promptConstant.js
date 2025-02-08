@@ -122,20 +122,6 @@ export const SYSTEM_PROMTP = (usersDescription,availableUser) => (`
 
 
 
-export const SENTENCE_FIXINF_PROMPT = `
-	Task: You are given a series of fragmented sentences. Your goal is to combine these fragments into a single, grammatically correct and coherent sentence, ensuring that the sentences flow logically from one to the next without redundancy or awkward phrasing.
-
-	Input:
-	A list of sentence fragments, each representing part of a larger idea or statement.
-	"I am making decent money locally.,But what should be my first step to take this online?,Should I focus on setting up a website first?,Or should I focus on getting my products ready for larger volumes?"
-
-	Output:
-	A single, coherent and grammatically correct sentence that logically combines all the input fragments, removing redundancy and ensuring proper flow.
-	"I am making decent money locally. But what should be my first step to take this online? Should I focus on setting up a website first or getting my products ready for larger volumes?"
-`
-
-
-
 
 
 

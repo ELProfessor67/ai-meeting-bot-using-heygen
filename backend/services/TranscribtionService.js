@@ -1,8 +1,7 @@
 import { Buffer } from 'node:buffer';
 import EventEmitter from 'events';
 import WebSocket from 'ws';
-import { SENTENCE_FIXINF_PROMPT } from '../constant/promptConstant.js';
-import { promptLLM } from './promptLLM.js';
+
 
 
 export class TranscriptionService extends EventEmitter {
@@ -16,7 +15,7 @@ export class TranscriptionService extends EventEmitter {
     //    process.env.DEEPGRAM_API_KEY,
     // ]);
 
-    this.socket = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2-phonecall&language=en&smart_format=true&sample_rate=8000&channels=1&multichannel=false&no_delay=true&endpointing=500&utterance_end_ms=1000&interim_results=true', [
+    this.socket = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2-phonecall&language=en&smart_format=true&sample_rate=8000&channels=1&multichannel=false&no_delay=true&endpointing=400&utterance_end_ms=1000&interim_results=true', [
       'token',
       process.env.DEEPGRAM_API_KEY,
     ]);
@@ -73,11 +72,31 @@ export class TranscriptionService extends EventEmitter {
 
 
   async mergeStrings(fragments) {
-    let result = fragments.join(",")
-    const promt = [{role: "system", content: SENTENCE_FIXINF_PROMPT},{role: "user",content: result || ''}];
+    let result = "";
 
-    const res = await promptLLM(promt);
-    return res;
+    // Iterate through the fragments
+    fragments.forEach(fragment => {
+      // Remove unnecessary fragments that are already contained in the result
+      if (!result.includes(fragment)) {
+        let overlapFound = false;
+
+        // Check for the longest overlap and merge
+        for (let i = 0; i <= result.length; i++) {
+          if (fragment.startsWith(result.slice(i))) {
+            result += fragment.slice(result.length - i);
+            overlapFound = true;
+            break;
+          }
+        }
+
+        // If no overlap, just append the fragment
+        if (!overlapFound) {
+          result += fragment;
+        }
+      }
+    });
+
+    return result.trim();
   }
 
 
